@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+pydantic
+https://github.com/fastapi/fastapi.git
