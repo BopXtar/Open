@@ -1,0 +1,70 @@
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+
+# Static API key for simplicity
+API_KEY = "CK30YVS6OGFCC2EPKY26"
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Mock trading bot logic
+def start_bot():
+    return "Bot started"
+
+def stop_bot():
+    return "Bot stopped"
+
+def get_status():
+    return "Running"
+
+def place_trade(symbol: str, quantity: int, action: str):
+    if action not in ["buy", "sell"]:
+        return {"success": False, "message": "Invalid action"}
+    return {"success": True, "message": f"{action.capitalize()} {quantity} of {symbol} successfully"}
+
+# Dependency for API key verification
+def verify_api_key(api_key: str):
+    if api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+# Models for request and response validation
+class TradeRequest(BaseModel):
+    symbol: str
+    quantity: int
+    action: str  # "buy" or "sell"
+
+class TradeResponse(BaseModel):
+    success: bool
+    message: str
+
+# Root endpoint
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Mañosobrosu Bot API"}
+
+# Bot management endpoints
+@app.post("/bot/start")
+def start_trading(api_key: str = Depends(verify_api_key)):
+    return {"status": start_bot()}
+
+@app.post("/bot/stop")
+def stop_trading(api_key: str = Depends(verify_api_key)):
+    return {"status": stop_bot()}
+
+@app.get("/bot/status")
+def bot_status(api_key: str = Depends(verify_api_key)):
+    return {"status": get_status()}
+
+# Trading endpoint
+@app.post("/trade")
+def create_trade(request: TradeRequest, api_key: str = Depends(verify_api_key)):
+    result = place_trade(request.symbol, request.quantity, request.action)
+    if result["success"]:
+        return TradeResponse(success=True, message=result["message"])
+    else:
+        raise HTTPException(status_code=400, detail=result["message"])
+
+# For deployment (e.g., running locally or on Render)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
