@@ -1,0 +1,13 @@
+File 3: .gitignore
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+.env
+
+# IDE files
+*.vscode
+*.idea
